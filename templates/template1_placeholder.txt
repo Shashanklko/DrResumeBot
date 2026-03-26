@@ -1,0 +1,6 @@
+This is a dummy template directory.
+
+To use custom DOCX templates, you would typically integrate a library like `python-docx-template` (docxtpl) into the bot. 
+Place your .docx templates here and parse their variables in `utils/pdf_generator.py` or a new module.
+
+Currently, the bot provides 5 built-in PDF formats that use Python ReportLab explicitly.
