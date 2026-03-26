@@ -82,7 +82,54 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
     return result
 
 
-def generate_improved_resume(resume_text: str, analysis: dict, job_description: str) -> dict:
+def answer_counter_question(question: str, resume_text: str, jd_text: str, analysis: dict, chat_history: list = None) -> str:
+    """
+    Answer user's question about the resume analysis.
+    """
+    model = genai.GenerativeModel("gemini-flash-latest")
+    
+    history_str = ""
+    if chat_history:
+        for msg in chat_history:
+            role = "User" if msg["role"] == "user" else "AI"
+            history_str += f"{role}: {msg['content']}\n"
+            
+    analysis_summary = (
+        f"Score: {analysis.get('overall_score', 0)}\n"
+        f"Strengths: {', '.join(analysis.get('strengths', []))}\n"
+        f"Weaknesses: {', '.join(analysis.get('weaknesses', []))}\n"
+        f"Missing Keywords: {', '.join(analysis.get('missing_keywords', []))}\n"
+    )
+
+    prompt = f"""You are an expert ATS and professional resume reviewer.
+The user is asking a question regarding their resume analysis, job description, and your suggestions. You need to answer them in a helpful, conversational, and constructive tone.
+
+=== BACKGROUND CONTEXT ===
+Job Description:
+{jd_text}
+
+Original Resume:
+{resume_text}
+
+Analysis Review:
+{analysis_summary}
+
+=== PREVIOUS CONVERSATION ===
+{history_str}
+
+=== USER QUESTION ===
+{question}
+
+Provide a concise, helpful answer that directly addresses their question using the context above.
+"""
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        return f"I'm sorry, I couldn't process your question at the moment. ({str(e)})"
+
+
+def generate_improved_resume(resume_text: str, analysis: dict, job_description: str, chat_history: list = None) -> dict:
     """
     Generate improved resume content based on analysis.
     Returns structured resume data for PDF generation.
@@ -93,6 +140,14 @@ def generate_improved_resume(resume_text: str, analysis: dict, job_description: 
         f"- [{s.get('section', 'General')}] {s.get('fix', '')}" for s in analysis.get("suggestions", [])
     ])
     missing_kw = ", ".join(analysis.get("missing_keywords", []))
+    
+    chat_str = "None"
+    if chat_history:
+        chat_str_lines = []
+        for msg in chat_history:
+            role = "User" if msg["role"] == "user" else "AI"
+            chat_str_lines.append(f"{role}: {msg['content']}")
+        chat_str = "\n".join(chat_str_lines)
 
     prompt = f"""You are an expert resume writer. Rewrite and improve the following resume based on the analysis feedback.
 
@@ -107,6 +162,10 @@ def generate_improved_resume(resume_text: str, analysis: dict, job_description: 
 
 === MISSING KEYWORDS TO ADD ===
 {missing_kw}
+
+=== USER REQUESTS (FROM CHAT INSTRUCTIONS) ===
+Incorporate these specific requests from the user's chat, overrides any previous suggestions if they conflict:
+{chat_str}
 
 Respond ONLY with a valid JSON object (no markdown) with this structure:
 {{

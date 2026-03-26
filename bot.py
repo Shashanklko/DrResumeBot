@@ -36,7 +36,7 @@ from telegram.ext import (
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from utils.resume_analyzer import analyze_resume, generate_improved_resume
+from utils.resume_analyzer import analyze_resume, generate_improved_resume, answer_counter_question
 from utils.pdf_generator import generate_all_formats, FORMATS
 from utils.pdf_extractor import extract_resume_text
 from utils.report_generator import build_review_report
@@ -167,7 +167,8 @@ async def handle_resume_file(update: Update, context: ContextTypes.DEFAULT_TYPE)
             "tmp_dir": tmp_dir,
             "resume_path": file_path,
             "resume_text": resume_text,
-            "fname": fname
+            "fname": fname,
+            "chat_history": []
         }
 
         word_count = len(resume_text.split())
@@ -318,6 +319,7 @@ async def send_analysis_results(update: Update, context: ContextTypes.DEFAULT_TY
             result_text += f"  ❌ {sug.get('issue', '')}\n"
             result_text += f"  ✅ {sug.get('fix', '')}\n"
 
+    result_text += "\n\n💬 *Questions?* You can type any questions here to discuss the analysis and ask for specific changes before downloading."
     result_text += "\n━━━━━━━━━━━━━━━━━━━━"
 
     keyboard = [[
@@ -359,7 +361,8 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 improved_data = generate_improved_resume(
                     data["resume_text"],
                     data["analysis"],
-                    data["jd_text"]
+                    data["jd_text"],
+                    data.get("chat_history", [])
                 )
                 USER_DATA[uid]["improved_data"] = improved_data
             else:
@@ -496,6 +499,58 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return WAITING_RESUME
 
 
+# ── Handle Questions ──────────────────────────────────────────────────────────
+async def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    msg = update.message
+    
+    if uid not in USER_DATA:
+        await msg.reply_text("Session expired. Please send /start again.")
+        return ConversationHandler.END
+
+    data = USER_DATA[uid]
+    question = msg.text.strip()
+    
+    # Add to history
+    data.setdefault("chat_history", []).append({"role": "user", "content": question})
+    
+    # Force regeneration if user asks a change
+    if "improved_data" in data:
+        del data["improved_data"]
+
+    status_msg = await msg.reply_text("🤔 *Thinking...*", parse_mode="Markdown")
+    
+    try:
+        answer = answer_counter_question(
+            question, 
+            data["resume_text"], 
+            data["jd_text"], 
+            data["analysis"], 
+            data["chat_history"][:-1]  # pass earlier history
+        )
+        
+        # Add bot answer to history
+        data["chat_history"].append({"role": "model", "content": answer})
+        
+        keyboard = [[
+            InlineKeyboardButton("📥 Get Improved CVs (5 Formats)", callback_data=f"gen_cv_{uid}"),
+        ], [
+            InlineKeyboardButton("📋 Download Full Review Report", callback_data=f"gen_report_{uid}"),
+        ]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await status_msg.edit_text(
+            f"🤖 *AI Reply:*\n\n{answer}", 
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+    except Exception as e:
+        logger.error(f"Error handling question: {e}")
+        await status_msg.edit_text("❌ Failed to get an answer. Please try again.")
+
+    return SHOWING_RESULTS
+
+
 # ── Fallback text handler ─────────────────────────────────────────────────────
 async def unexpected_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -547,6 +602,7 @@ def main():
             ],
             SHOWING_RESULTS: [
                 CallbackQueryHandler(callback_handler),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_question),
             ],
         },
         fallbacks=[
