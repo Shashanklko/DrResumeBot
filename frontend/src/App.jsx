@@ -400,10 +400,10 @@ export default function App() {
             >
               <div className="text-center mb-10">
                 <h1 className="text-5xl font-bold mb-6 tracking-tight text-white">
-                  Is your resume <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500">Industry Ready?</span>
+                  Get Professional <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500">AI Resume Analysis</span>
                 </h1>
                 <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
-                  Upload your resume and paste the job description. Our AI will analyze your score, suggest changes, and generate 5 professional CV formats.
+                  Is your resume industry-ready? Upload your CV and paste the job description to get an instant ATS score, improvement tips, and 5 premium CV formats.
                 </p>
               </div>
 

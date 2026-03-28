@@ -44,6 +44,12 @@ cp .env.example .env
 nano .env   # or open in any text editor
 ```
 
+### ⚛️ 5. Frontend (Vercel)
+- **`frontend/src/App.jsx`**: Modified the API base URL to use the `VITE_API_URL` environment variable. This allows the frontend to point to your live Render backend when deployed.
+
+### 🐍 6. Python Version
+- **`server/runtime.txt`**: Added to specify Python 3.11.10 for Render.
+
 Your `.env` should look like:
 ```
 TELEGRAM_BOT_TOKEN=7123456789:AAHdq...your_token...
@@ -52,9 +58,9 @@ BENCHMARK_SCORE=70
 MAX_FILE_SIZE_MB=5
 ```
 
-### 5. Run the Bot
+### 5. Run the Bot & Web API
 ```bash
-python bot.py
+python server/main.py
 ```
 
 That's it! Your bot is live 🎉
