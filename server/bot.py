@@ -66,6 +66,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "━━━━━━━━━━━━━━━━━━━━\n"
         "📎 *Send me your resume* (PDF, DOCX, or TXT) to begin!"
     )
+    
     await update.message.reply_text(text, parse_mode="Markdown")
     return WAITING_RESUME
 
@@ -89,6 +90,12 @@ async def handle_contribute(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     logger.info(f"💖 [USER: {user.id}] Requested contribute info.")
     
+    if update.callback_query:
+        await update.callback_query.answer()
+        message = update.callback_query.message
+    else:
+        message = update.message
+    
     text = (
         "🤝 *Support Resumegoat*\n\n"
         "This project is maintained by contributors like @Shashanklko to provide a premium AI resume experience for free.\n\n"
@@ -108,12 +115,12 @@ async def handle_contribute(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         qr_path = os.path.join(str(Path(__file__).parent.parent), "binance-qr.png")
         if os.path.exists(qr_path):
-            await update.message.reply_photo(photo=open(qr_path, "rb"), caption=text, parse_mode="Markdown")
+            await message.reply_photo(photo=open(qr_path, "rb"), caption=text, parse_mode="Markdown")
             return
     except Exception as e:
         logger.error(f"❌ Failed to attach QR Code: {e}")
         
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await message.reply_text(text, parse_mode="Markdown")
 
 # ── Resume Upload Handler ─────────────────────────────────────────────────────
 async def handle_resume_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -302,8 +309,15 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await status_msg.edit_text("✅ All documents delivered! Check your messages above. 🐐")
             
             # Send Final Options
-            keyboard = [[InlineKeyboardButton("✨ Start New Review", callback_data="reset_session")]]
-            await query.message.reply_text("Hope these help you land the job! 🚀\nClick below to clear data and start fresh.", reply_markup=InlineKeyboardMarkup(keyboard))
+            keyboard = [
+                [InlineKeyboardButton("💖 Support the Project", callback_data="show_donate")],
+                [InlineKeyboardButton("✨ Start New Review", callback_data="reset_session")]
+            ]
+            await query.message.reply_text(
+                "Hope these help you land the job! 🚀\n"
+                "If you found this free tool useful, please consider supporting its development! ❤️", 
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
             
         except Exception as e:
             logger.error(f"❌ Document delivery failed for {user.id}: {e}")
@@ -349,18 +363,22 @@ def init_bot():
             CommandHandler("clear", reset_session),
             CommandHandler("stop", cancel),
             CommandHandler("contribute", handle_contribute),
+            CallbackQueryHandler(handle_contribute, pattern="^show_donate$"),
             MessageHandler(filters.Document.ALL, handle_resume_file)
         ],
         states={
             WAITING_RESUME: [
                 MessageHandler(filters.Document.ALL, handle_resume_file),
+                CallbackQueryHandler(handle_contribute, pattern="^show_donate$"),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, lambda u, c: u.message.reply_text("📎 Send your resume first."))
             ],
             WAITING_JD: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handle_job_description),
-                CallbackQueryHandler(callback_handler, pattern="^skip_jd$")
+                CallbackQueryHandler(callback_handler, pattern="^skip_jd$"),
+                CallbackQueryHandler(handle_contribute, pattern="^show_donate$")
             ],
             SHOWING_RESULTS: [
+                CallbackQueryHandler(handle_contribute, pattern="^show_donate$"),
                 CallbackQueryHandler(callback_handler),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handle_question)
             ],
@@ -370,7 +388,8 @@ def init_bot():
             CommandHandler("stop", cancel),
             CommandHandler("reset", reset_session),
             CommandHandler("clear", reset_session),
-            CommandHandler("contribute", handle_contribute)
+            CommandHandler("contribute", handle_contribute),
+            CallbackQueryHandler(handle_contribute, pattern="^show_donate$")
         ],
         allow_reentry=True
     )
