@@ -167,23 +167,10 @@ def build_review_report(analysis: dict, candidate_name: str = "Candidate") -> by
             issue = sug.get("issue", "")
             fix = sug.get("fix", "")
 
-            sug_table = Table([
-                [Paragraph(f"#{i}  [{section}]", sty("sn", fontName="Helvetica-Bold",
-                            fontSize=10, textColor=PRIMARY))],
-                [Paragraph(f"<b>Issue:</b> {issue}", body)],
-                [Paragraph(f"<b>Fix:</b> {fix}", sty("fix", fontName="Helvetica",
-                            fontSize=10, textColor=GREEN, spaceAfter=0, leading=14))]
-            ], colWidths=[16*cm])
-            sug_table.setStyle(TableStyle([
-                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-                ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                ("TOPPADDING", (0, 0), (-1, -1), 4),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#DDDDDD")),
-                ("BACKGROUND", (0, 0), (-1, 0), LIGHT),
-            ]))
-            story.append(sug_table)
-            story.append(Spacer(1, 6))
+            story.append(Paragraph(f"<b>#{i}  [{section.upper()}]</b>", sty("sn", fontName="Helvetica-Bold", fontSize=11, textColor=PRIMARY, spaceBefore=4)))
+            story.append(Paragraph(f"<b>Issue:</b> {issue}", body))
+            story.append(Paragraph(f"<b>Fix:</b> {fix}", sty("fix", fontName="Helvetica", fontSize=10, textColor=GREEN, spaceAfter=8, leading=14)))
+            story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#DDDDDD"), spaceAfter=6))
 
     # Footer
     story.append(Spacer(1, 10))

@@ -157,3 +157,13 @@ cython_debug/
 
 # VS Code
 .vscode/
+
+# Node.js
+node_modules/
+dist/
+
+# Application specific
+server/main.pid
+server/debug_pdf.txt
+*.pdf
+*.docx

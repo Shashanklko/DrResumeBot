@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+:root {
+  --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e1e24;
+  border-radius: 10px;
+  border: 2px solid #0a0a0c;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2d2d35;
+}
+
+/* Selection Color */
+::selection {
+  background: rgba(168, 85, 247, 0.4);
+  color: #fff;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Glassmorphism utility if needed beyond tailwind */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}

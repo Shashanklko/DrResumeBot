@@ -3,23 +3,22 @@ pdf_extractor.py
 Extracts plain text from uploaded PDF/DOCX resume files.
 """
 
-import fitz  # PyMuPDF
+import pdfplumber  # Modern alternative to PyMuPDF
 import os
+from docx import Document
 
 
 def extract_text_from_pdf(file_path: str) -> str:
     """Extract text from a PDF file."""
-    doc = fitz.open(file_path)
     text_parts = []
-    for page in doc:
-        text_parts.append(page.get_text())
-    doc.close()
+    with pdfplumber.open(file_path) as pdf:
+        for page in pdf.pages:
+            text_parts.append(page.extract_text() or "")
     return "\n".join(text_parts).strip()
 
 
 def extract_text_from_docx(file_path: str) -> str:
     """Extract text from a DOCX file."""
-    from docx import Document
     doc = Document(file_path)
     paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
     return "\n".join(paragraphs)
