@@ -894,7 +894,6 @@ export default function App() {
                 </div>
 
                 <div className="mt-12 pt-10 border-t border-white/5 text-center relative z-10">
-                  <p className="text-[10px] text-slate-600 uppercase tracking-[0.3em] font-medium italic">High Efficiency · Powered by Gemini 3.1 Flash Lite</p>
                 </div>
               </div>
             </motion.div>
