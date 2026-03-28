@@ -248,6 +248,7 @@ export default function App() {
   const [customCvInstructions, setCustomCvInstructions] = useState("");
   const [isDevModalOpen, setIsDevModalOpen] = useState(false);
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+  const [donateMethod, setDonateMethod] = useState(null);
   const [copyFeedback, setCopyFeedback] = useState("");
   const [mode, setMode] = useState('analyze'); // 'analyze' or 'simple'
 
@@ -923,80 +924,122 @@ export default function App() {
                 
                 <div className="flex items-center justify-between mb-8 relative z-10">
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <Star className="text-purple-400" /> Support the Project
+                    {donateMethod === 'crypto' ? (
+                      <button onClick={() => setDonateMethod(null)} className="mr-2 hover:text-white text-slate-500 transition-colors p-1 hover:bg-white/5 rounded-full" title="Back">
+                        <ArrowRight className="w-6 h-6 rotate-180" />
+                      </button>
+                    ) : (
+                      <Star className="text-purple-400" />
+                    )}
+                    Support the Project
                   </h2>
                   <button 
-                    onClick={() => setIsDonateModalOpen(false)}
+                    onClick={() => { setIsDonateModalOpen(false); setTimeout(() => setDonateMethod(null), 300); }}
                     className="p-2 hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all"
                   >
                     <X className="w-6 h-6" />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                  {/* Buy Me a Coffee */}
-                  <a 
-                    href="https://buymeacoffee.com/shashanklko" 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group p-8 bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 hover:from-yellow-500/10 hover:to-yellow-500/20 border border-yellow-500/20 rounded-3xl transition-all duration-300 flex flex-col items-center text-center"
-                  >
-                    <div className="w-16 h-16 bg-yellow-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                      <Coffee className="text-yellow-400 w-8 h-8" />
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-2">Buy Me a Coffee</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed uppercase tracking-wider font-bold">Quick Support</p>
-                  </a>
-
-                  {/* Crypto Donation */}
-                  <div className="p-8 bg-white/[0.02] border border-white/10 rounded-3xl">
-                    <div className="flex items-center gap-3 mb-6">
-                      <Coins className="text-purple-400 w-5 h-5" />
-                      <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Crypto Wallet</h3>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {[
-                        { label: 'USDT (TRC20)', addr: 'TQdsoT57Dsm5mSkXvJJVu2VsnEtjTm2w8N' },
-                        { label: 'USDT (BEP20)', addr: '0x211e210c6541d6e3ed9330153ce70819a59c5c5d' },
-                        { label: 'ETH (ERC20)', addr: '0x211e210c6541d6e3ed9330153ce70819a59c5c5d' },
-                        { label: 'BTC (BTC)', addr: '16Jzr9AX3rX4ody2bSUCR8nuDD23dGrdja' }
-                      ].map(crypto => (
-                        <div key={crypto.label} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl hover:border-purple-500/40 transition-all group/item">
-                          <div className="overflow-hidden mr-2">
-                            <p className="text-[10px] font-black text-purple-400 mb-0.5">{crypto.label}</p>
-                            <p className="text-xs text-slate-400 font-mono truncate">{crypto.addr}</p>
+                <div className="relative z-10">
+                  <AnimatePresence mode="wait">
+                    {!donateMethod ? (
+                      <motion.div
+                        key="selection"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                      >
+                        {/* Buy Me a Coffee */}
+                        <a 
+                          href="https://buymeacoffee.com/shashanklko" 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group p-8 bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 hover:from-yellow-500/10 hover:to-yellow-500/20 border border-yellow-500/20 rounded-3xl transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[260px]"
+                        >
+                          <div className="w-16 h-16 bg-yellow-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                            <Coffee className="text-yellow-400 w-8 h-8" />
                           </div>
-                          <button 
-                            onClick={() => {
-                              navigator.clipboard.writeText(crypto.addr);
-                              setCopyFeedback(crypto.label);
-                              setTimeout(() => setCopyFeedback(""), 2000);
-                            }}
-                            className="p-2 shrink-0 hover:bg-purple-500/20 rounded-lg text-slate-500 hover:text-purple-400 transition-all"
-                          >
-                            {copyFeedback === crypto.label ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                          <h3 className="text-xl font-bold text-white mb-3">Buy Me a Coffee</h3>
+                          <p className="text-xs text-slate-400 leading-relaxed uppercase tracking-wider font-bold">Quick & Easy Support</p>
+                        </a>
 
-                    {/* Binance Pay QR Section */}
-                    <div className="mt-6 pt-6 border-t border-white/5 flex flex-col items-center">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 text-center">Scan with Binance App to Pay</p>
-                        <div className="bg-white p-2 rounded-[20px] shadow-lg">
-                            <img 
-                                src="/binance-qr.png" 
-                                alt="Binance Pay QR" 
-                                className="w-32 h-32 object-contain rounded-xl" 
-                                onError={(e) => {
-                                    e.target.style.display='none';
-                                    e.target.parentElement.innerHTML = '<div class="w-32 h-32 flex items-center justify-center text-xs text-black/50 text-center font-bold">Please save binance-qr.png to public/ folder</div>';
-                                }} 
-                            />
+                        {/* Crypto Selection Button */}
+                        <button 
+                          onClick={() => setDonateMethod('crypto')}
+                          className="group p-8 bg-gradient-to-br from-purple-500/5 to-purple-500/10 hover:from-purple-500/10 hover:to-purple-500/20 border border-purple-500/20 rounded-3xl transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[260px]"
+                        >
+                          <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                            <Coins className="text-purple-400 w-8 h-8" />
+                          </div>
+                          <h3 className="text-xl font-bold text-white mb-3">Crypto Donation</h3>
+                          <p className="text-xs text-slate-400 leading-relaxed uppercase tracking-wider font-bold">Binance Pay & Wallets</p>
+                        </button>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="crypto"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                      >
+                        {/* Binance Pay QR Section - Left Side */}
+                        <div className="p-8 bg-white/[0.02] border border-white/10 rounded-3xl flex flex-col items-center justify-center text-center min-h-[320px] shadow-inner">
+                          <div className="flex items-center gap-3 mb-6">
+                            <Zap className="text-yellow-400 w-5 h-5" />
+                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Binance Pay</h3>
+                          </div>
+                          <p className="text-[10px] uppercase tracking-widest text-slate-400 mb-6">Scan with Binance App</p>
+                          <div className="bg-white p-3 rounded-[24px] shadow-2xl">
+                              <img 
+                                  src="/binance-qr.png" 
+                                  alt="Binance Pay QR" 
+                                  className="w-40 h-40 object-contain rounded-xl" 
+                                  onError={(e) => {
+                                      e.target.style.display='none';
+                                      e.target.parentElement.innerHTML = '<div class="w-40 h-40 flex items-center justify-center text-xs text-black/50 text-center font-bold">Please save binance-qr.png to public/ folder</div>';
+                                  }} 
+                              />
+                          </div>
                         </div>
-                    </div>
-                  </div>
+
+                        {/* Direct Wallets - Right Side */}
+                        <div className="p-8 bg-white/[0.02] border border-white/10 rounded-3xl flex flex-col min-h-[320px] shadow-inner">
+                          <div className="flex items-center gap-3 mb-6">
+                            <Coins className="text-purple-400 w-5 h-5" />
+                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Direct Transfer</h3>
+                          </div>
+                          <div className="space-y-4 flex-1 flex flex-col justify-center">
+                            {[
+                              { label: 'USDT (TRC20)', addr: 'TQdsoT57Dsm5mSkXvJJVu2VsnEtjTm2w8N' },
+                              { label: 'USDT (BEP20)', addr: '0x211e210c6541d6e3ed9330153ce70819a59c5c5d' },
+                              { label: 'ETH (ERC20)', addr: '0x211e210c6541d6e3ed9330153ce70819a59c5c5d' },
+                              { label: 'BTC (BTC)', addr: '16Jzr9AX3rX4ody2bSUCR8nuDD23dGrdja' }
+                            ].map(crypto => (
+                              <div key={crypto.label} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl hover:border-purple-500/40 transition-all group/item">
+                                <div className="overflow-hidden mr-3">
+                                  <p className="text-[10px] font-black text-purple-400 mb-0.5">{crypto.label}</p>
+                                  <p className="text-xs text-slate-400 font-mono truncate">{crypto.addr}</p>
+                                </div>
+                                <button 
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(crypto.addr);
+                                    setCopyFeedback(crypto.label);
+                                    setTimeout(() => setCopyFeedback(""), 2000);
+                                  }}
+                                  className="p-2 shrink-0 bg-white/5 hover:bg-purple-500/20 rounded-lg text-slate-400 hover:text-purple-400 transition-all"
+                                >
+                                  {copyFeedback === crypto.label ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <p className="mt-8 text-center text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed">
