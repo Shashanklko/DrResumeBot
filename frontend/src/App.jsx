@@ -390,6 +390,24 @@ export default function App() {
   const [copyFeedback, setCopyFeedback] = useState("");
   const [mode, setMode] = useState('analyze'); // 'analyze' or 'simple'
 
+  // ── URL Routing via History API ──
+  useEffect(() => {
+    const onPopState = () => {
+      // User pressed browser Back — if we're on /, reset to home view
+      if (window.location.pathname === '/' || window.location.pathname === '') {
+        setFile(null);
+        setJd('');
+        setSid(null);
+        setAnalysis(null);
+        setError(null);
+        setChatHistory([]);
+        setImprovedData(null);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!file) return;
@@ -410,6 +428,12 @@ export default function App() {
       const res = await axios.post(endpoint, formData);
       
       setSid(res.data.sid);
+      // Push /results to URL bar so it reads resumehub.store/results
+      window.history.pushState({ page: 'results' }, 'Resume Analysis Results', '/results');
+      // Track page view in GA4
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'page_view', { page_title: 'Resume Analysis Results', page_path: '/results' });
+      }
       if (mode === 'analyze') {
         setAnalysis(res.data.analysis);
       } else {
@@ -484,6 +508,11 @@ export default function App() {
     setError(null);
     setChatHistory([]);
     setImprovedData(null);
+    // Return URL to home
+    window.history.pushState({ page: 'home' }, 'Resumehub.store - AI Resume Reviewer', '/');
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'page_view', { page_title: 'Resumehub.store - AI Resume Reviewer', page_path: '/' });
+    }
   };
 
   return (
